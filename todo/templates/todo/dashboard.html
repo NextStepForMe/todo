@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Advanced Todo App{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-tasks text-primary"></i></h5>
+                <h3 class="text-primary">24</h3>
+                <p class="card-text">Total Tasks</p>
+            </div>
+        </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-check-circle text-success"></i></h5>
+                <h3 class="text-success">12</h3>
+                <p class="card-text">Completed</p>
+            </div>
+        </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-clock text-warning"></i></h5>
+                <h3 class="text-warning">8</h3>
+                <p class="card-text">Pending</p>
+            </div>
+        </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-exclamation-triangle text-danger"></i></h5>
+                <h3 class="text-danger">4</h3>
+                <p class="card-text">Overdue</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Recent Tasks</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Complete project proposal</h6>
+                            <small>15 mins ago</small>
+                        </div>
+                        <p class="mb-1">Finish the proposal document for the new client</p>
+                        <small class="text-muted"><span class="badge bg-danger">High</span> <span class="badge bg-secondary">Pending</span></small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Schedule team meeting</h6>
+                            <small>30 mins ago</small>
+                        </div>
+                        <p class="mb-1">Organize the weekly team sync</p>
+                        <small class="text-muted"><span class="badge bg-warning">Medium</span> <span class="badge bg-primary">In Progress</span></small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Update documentation</h6>
+                            <small>2 hours ago</small>
+                        </div>
+                        <p class="mb-1">Update the API documentation</p>
+                        <small class="text-muted"><span class="badge bg-success">Low</span> <span class="badge bg-success">Completed</span></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-pie me-2"></i>Task Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="taskChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'todo_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create New Todo
+                    </a>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-calendar me-2"></i>Add to Calendar
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-bell me-2"></i>Set Reminder
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-share-alt me-2"></i>Share Tasks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize the chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('taskChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'In Progress', 'Completed'],
+                datasets: [{
+                    data: [8, 4, 12],
+                    backgroundColor: [
+                        '#ffc107',
+                        '#0d6efd',
+                        '#198754'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

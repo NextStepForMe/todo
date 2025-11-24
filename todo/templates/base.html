@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Advanced Todo App{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] {
+            --card-bg: #343a40;
+            --text-color: #e9ecef;
+            --border-color: #495057;
+            --light-bg: #212529;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: box-shadow 0.15s ease-in-out;
+        }
+
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0.15);
+        }
+
+        .todo-item {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .todo-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .priority-low {
+            border-left-color: #4ade80;
+        }
+
+        .priority-medium {
+            border-left-color: #facc15;
+        }
+
+        .priority-high {
+            border-left-color: #f87171;
+        }
+
+        .status-badge {
+            font-size: 0.75em;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+        }
+
+        .main-content {
+            min-height: 100vh;
+        }
+
+        .todo-actions .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .category-badge {
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+        }
+
+        .drag-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .drag-area.drag-over {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'todo_list' %}">
+                <i class="fas fa-tasks me-2"></i>Advanced Todo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'todo_list' %}"><i class="fas fa-list me-1"></i>My Todos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'todo_create' %}"><i class="fas fa-plus me-1"></i>Add Todo</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus me-1"></i>Register</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link theme-toggle" id="themeToggle" href="#">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid flex-grow-1">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse bg-light" id="sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'todo_list' %}">
+                                <i class="fas fa-home me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'todo_create' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Create Todo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-calendar me-2"></i>Calendar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-bar me-2"></i>Analytics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Categories</span>
+                        <a class="link-secondary" href="#" aria-label="Add a new category">
+                            <i class="fas fa-plus-circle"></i>
+                        </a>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <span class="badge bg-primary rounded-pill">Work</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <span class="badge bg-success rounded-pill">Personal</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <span class="badge bg-warning rounded-pill">Shopping</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">Advanced Todo App &copy; 2025</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        // Theme toggle functionality
+        function setTheme(themeName) {
+            localStorage.setItem('theme', themeName);
+            document.documentElement.setAttribute('data-bs-theme', themeName);
+            const icon = document.getElementById('themeIcon');
+            if (themeName === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        function toggleTheme() {
+            if (localStorage.getItem('theme') === 'dark') {
+                setTheme('light');
+            } else {
+                setTheme('dark');
+            }
+        }
+
+        // Initialize theme
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+            
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        })();
+
+        // Search functionality
+        $(document).ready(function() {
+            let searchTimeout;
+            const searchResults = $('.search-results');
+            
+            $('#searchInput').on('input', function() {
+                const query = $(this).val().trim();
+                
+                if (query.length < 2) {
+                    searchResults.hide();
+                    return;
+                }
+                
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '{% url "todo_search" %}',
+                        data: {'q': query},
+                        success: function(data) {
+                            searchResults.empty();
+                            if (data.results.length > 0) {
+                                data.results.forEach(function(todo) {
+                                    const todoItem = `
+                                        <div class="p-2 border-bottom">
+                                            <a href="{% url "todo_update" 0 %}".replace('0', todo.id) class="text-decoration-none">
+                                                <div class="fw-bold">${todo.title}</div>
+                                                <small class="text-muted">${todo.description.substring(0, 50)}...</small>
+                                            </a>
+                                        </div>
+                                    `;
+                                    searchResults.append(todoItem);
+                                });
+                                searchResults.show();
+                            } else {
+                                searchResults.append('<div class="p-2 text-center text-muted">No results found</div>');
+                                searchResults.show();
+                            }
+                        }
+                    });
+                }, 300);
+            });
+            
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.search-container').length) {
+                    searchResults.hide();
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
